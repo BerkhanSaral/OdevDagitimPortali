@@ -1,0 +1,62 @@
+﻿@using OdevDagitimPortali.ViewModels
+@model SubmissionModel
+@{
+    Layout = "_LayoutAdmin";
+}
+@section CardHeader {
+    <!-- CardHeader kısmındaki içerik şu an boş -->
+}
+
+<div class="row">
+    <div class="col-md-4">
+
+            <form method="post" asp-action="Add" enctype="multipart/form-data">
+
+            <div class="mb-3">
+                <label asp-for="assignment_ID"></label>
+                <select asp-for="assignment_ID" asp-items="ViewBag.Assignments" class="form-control">
+                    <option value="">--- Ödev Seçiniz ---</option>
+                </select>
+                <span class="text-danger" asp-validation-for="assignment_ID"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="user_ID"></label>
+                <select asp-for="user_ID" asp-items="ViewBag.Students" class="form-control">
+                    <option value="">--- Öğrenci Seçiniz ---</option>
+                </select>
+                <span class="text-danger" asp-validation-for="user_ID"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="submission_date"></label>
+                <input asp-for="submission_date" class="form-control" />
+                <span class="text-danger" asp-validation-for="submission_date"></span>
+            </div>
+
+         
+            <div class="mb-3">
+                <label for="UploadedFile" class="form-label">Dosya Yükle</label>
+                <input asp-for="UploadedFile" type="file" class="form-control" />
+                <span class="text-danger" asp-validation-for="UploadedFile"></span>
+            </div>
+
+            <div class="mb-3">
+                <input type="submit" value="Kaydet" class="btn btn-sm btn-primary" />
+            </div>
+
+        </form>
+
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+
+
+
+
+

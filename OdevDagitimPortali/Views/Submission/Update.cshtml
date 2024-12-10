@@ -1,0 +1,46 @@
+﻿@using OdevDagitimPortali.ViewModels
+@model SubmissionModel
+@{
+    ViewData["title"] = "Add";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section CardHeader {
+    <span>Odev Düzenle</span>
+}
+<div class="row">
+    <div class="col-md-6">
+
+
+        <form method="post" asp-action="Update" enctype="multipart/form-data">
+            <!-- Gizli input ile SubmissionID'yi gönderiyoruz -->
+            <input type="hidden" asp-for="submission_id" />
+
+            <div class="mb-3">
+                <label asp-for="assignment_ID"></label>
+                <select asp-for="assignment_ID" asp-items="ViewBag.Assignments" class="form-control">
+                    <option value="">--- Ödev Seçiniz ---</option>
+                </select>
+                <span class="text-danger" asp-validation-for="assignment_ID"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="user_ID"></label>
+                <input asp-for="user_ID" class="form-control" />
+                <span class="text-danger" asp-validation-for="user_ID"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="file_url"></label>
+                <input asp-for="file_url" type="file" class="form-control" name="file" />
+                <span class="text-danger" asp-validation-for="file_url"></span>
+            </div>
+
+            <div class="mb-3">
+                <input type="submit" value="Kaydet" class="btn btn-sm btn-primary" />
+            </div>
+        </form>
+
+
+    </div>
+</div>

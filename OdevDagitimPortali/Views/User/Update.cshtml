@@ -1,0 +1,53 @@
+﻿@using OdevDagitimPortali.ViewModels
+@model UserModel﻿﻿
+@{
+    ViewData["title"] = "Add";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section CardHeader {
+    <span>Üye Düzenle</span>
+}
+<div class="row">
+    <div class="col-md-6">
+
+
+        <form method="post" asp-action="Update" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label asp-for="fullname"></label>
+                <input asp-for="fullname" class="form-control" />
+                <input asp-for="user_id" type="hidden" />
+                <span class="text-danger" asp-validation-for="fullname"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="user_name"></label>
+                <input asp-for="user_name" class="form-control" />
+                <span class="text-danger" asp-validation-for="user_name"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="email"></label>
+                <input asp-for="email" class="form-control" />
+                <span class="text-danger" asp-validation-for="email"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="password"></label>
+                <input asp-for="password" class="form-control" />
+                <span class="text-danger" asp-validation-for="password"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="role"></label>
+                <select asp-for="role" class="form-control" asp-items="ViewBag.Roles"></select>
+                <span class="text-danger" asp-validation-for="role"></span>
+            </div>
+
+            <div class="mb-3">
+                <input type="submit" value="Kaydet" class="btn btn-sm btn-primary" />
+            </div>
+
+        </form>
+
+
+    </div>
+</div>

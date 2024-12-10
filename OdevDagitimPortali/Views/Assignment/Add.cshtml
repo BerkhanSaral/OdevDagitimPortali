@@ -1,0 +1,54 @@
+﻿@using OdevDagitimPortali.ViewModels
+@model AssignmentModel
+@{
+    ViewData["title"] = "Add";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section CardHeader {
+    <span>Odev Ekle</span>
+}
+<div class="row">
+    <div class="col-md-6">
+
+
+        <form method="post" asp-action="Add" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label asp-for="title"></label>
+                <input asp-for="title" class="form-control" />
+                <span class="text-danger" asp-validation-for="title"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="description"></label>
+                <input asp-for="description" class="form-control" />
+                <span class="text-danger" asp-validation-for="description"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="create_date"></label>
+                <input asp-for="create_date" class="form-control" />
+                <span class="text-danger" asp-validation-for="create_date"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="deadline"></label>
+                <input asp-for="deadline" class="form-control" />
+                <span class="text-danger" asp-validation-for="deadline"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="user_ID"></label>
+                <select asp-for="user_ID" asp-items="ViewBag.user_ID" class="form-control">
+                    <option value="">---Ogretmen Seciniz---</option>
+                </select>
+                <span class="text-danger" asp-validation-for="user_ID"></span>
+            </div>
+
+            <div class="mb-3">
+                <input type="submit" value="Kaydet" class="btn btn-sm btn-primary" />
+            </div>
+
+        </form>
+
+
+    </div>
+</div>

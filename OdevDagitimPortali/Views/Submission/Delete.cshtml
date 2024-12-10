@@ -1,0 +1,28 @@
+﻿@using OdevDagitimPortali.ViewModels
+@model SubmissionModel
+
+@{
+    ViewData["title"] = "Delete";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section CardHeader {
+    <span>Odev Sil</span>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<form method="post">
+    <h5>@Model.submission_id isimli üye silinecektir. Onaylıyor musunuz?</h5>
+    <input asp-for="user_ID" type="hidden" />
+
+    <div class="mb-3">
+        <input type="submit" value="Üye Sil" class="btn btn-sm btn-danger" />
+        <a asp-action="Index" class="btn btn-sm btn-secondary">Vazgeç</a>
+    </div>
+</form>

@@ -1,0 +1,50 @@
+﻿<@using OdevDagitimPortali.ViewModels
+@model List<SubmissionModel>
+﻿@{
+    ViewData["title"] = "Index";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+@section CardHeader {
+        <span>Odevler</span>
+}
+
+
+<a asp-action="Add" asp-controller="Submission" class="btn btn-primary btn-sm mb-2">Ekle</a>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Odev Id</th>
+            <th>Ogrenci Id</th>
+            <th>Odevin Gonderilis Tarihi</th>
+            <th>Odev Dosya</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null || !Model.Any())
+        {
+        <tr>
+            <td colspan="5">Henüz bir ödev yüklenmedi.</td>
+        </tr>
+        }
+        else
+        {
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.assignment_ID</td>
+                    <td>@item.user_ID</td>
+                    <td>@item.submission_date</td>
+                    <td>@item.file_url</td>
+                    <td>
+                        <a asp-action="UserRole" asp-route-id="@item.submission_id" class="btn btn-primary btn-sm">Yetkiler</a>
+                    </td>
+                    <td>
+                        <a asp-action="Update" asp-route-id="@item.submission_id" class="btn btn-primary btn-sm">Düzenle</a>
+                        <a asp-action="Delete" asp-route-id="@item.submission_id" class="btn btn-danger btn-sm">Sil</a>
+                    </td>
+                </tr>
+            }
+        }
+
+    </tbody>
+</table>

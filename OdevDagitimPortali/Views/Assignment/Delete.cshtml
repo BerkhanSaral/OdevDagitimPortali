@@ -1,0 +1,29 @@
+﻿@using OdevDagitimPortali.ViewModels
+@model AssignmentModel
+
+@{
+    ViewData["title"] = "Delete";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+@section CardHeader {
+    <span>Odev Sil</span>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+
+    <form method="post">
+        <h5>@Model.title isimli ödev silinecektir. Onaylıyor musunuz?</h5>
+        <input type="hidden" name="assignment_id" value="@Model.assignment_id" />
+
+        <div class="mb-3">
+            <input type="submit" value="Ödev Sil" class="btn btn-sm btn-danger" />
+            <a asp-action="Index" class="btn btn-sm btn-secondary">Vazgeç</a>
+        </div>
+    </form>
