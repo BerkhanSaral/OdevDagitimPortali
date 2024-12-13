@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OdevDagitimPortali.Models;
@@ -11,12 +12,14 @@ namespace OdevDagitimPortali.Controllers
     {
         private readonly SubmissionRepository _submissionRepository;
         private readonly ApplicationDbContext _applicationDbContext;
+        private readonly INotyfService _notyf;
 
 
-        public SubmissionController(SubmissionRepository submissionRepository, ApplicationDbContext applicationDbContext)
+        public SubmissionController(SubmissionRepository submissionRepository, ApplicationDbContext applicationDbContext, INotyfService notyf)
         {
             _submissionRepository = submissionRepository;
             _applicationDbContext = applicationDbContext;
+            _notyf = notyf;
         }
 
         public IActionResult Index()
@@ -95,6 +98,7 @@ namespace OdevDagitimPortali.Controllers
 
                     // Submission'ı veritabanına kaydet
                     _applicationDbContext.Submissions.Add(submission);
+                    _notyf.Success("Ogrenci Odevi Ekledi...");
                     _applicationDbContext.SaveChanges();
 
                     return RedirectToAction("Index");
@@ -166,6 +170,7 @@ namespace OdevDagitimPortali.Controllers
 
 
             _submissionRepository.Delete(model.assignment_ID);
+            _notyf.Success("Ogrenci Odevi Sildi...");
             return RedirectToAction("Index");
         }
     }

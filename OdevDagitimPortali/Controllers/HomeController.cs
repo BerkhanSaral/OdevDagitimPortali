@@ -70,6 +70,8 @@ namespace OdevDagitimPortali.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            Debug.WriteLine("Suan burada 6");
+
             // Geçersiz kullanıcı adı veya şifre
             ModelState.AddModelError("", "Geçersiz kullanıcı adı veya parola.");
             return View(model); // Geçersiz giriş durumunda tekrar Login sayfasını göster

@@ -8,7 +8,7 @@ namespace OdevDagitimPortali.Repository
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-
+            int x = 5;
         }
         public DbSet<Assignment> Assignments { get; set; }
         public DbSet<Submission> Submissions { get; set; }

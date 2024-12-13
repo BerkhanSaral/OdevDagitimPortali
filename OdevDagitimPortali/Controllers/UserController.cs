@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using OdevDagitimPortali.Models.user;
 using OdevDagitimPortali.Repository;
@@ -10,10 +11,12 @@ namespace OdevDagitimPortali.Controllers
     {
 
         private readonly UserRepository _userRepository;
+        private readonly INotyfService _notyf;
 
-        public UserController(UserRepository userRepository)
+        public UserController(UserRepository userRepository, INotyfService notyf)
         {
             _userRepository = userRepository;
+            _notyf = notyf;
         }
 
 
@@ -41,6 +44,7 @@ namespace OdevDagitimPortali.Controllers
                 return View(model);
             }
             _userRepository.Add(model);
+            _notyf.Success("Kullanici Eklendi...");
             return RedirectToAction("Index");
         }
         public IActionResult Update(int id)
@@ -60,6 +64,7 @@ namespace OdevDagitimPortali.Controllers
                 return View(model);
             }
             _userRepository.Update(model);
+            _notyf.Success("Kullanici Güncellendi...");
             return RedirectToAction("Index");
         }
         public IActionResult Delete(int id)
@@ -84,6 +89,7 @@ namespace OdevDagitimPortali.Controllers
             }
 
             _userRepository.Delete(model.user_id); // Kullanıcıyı siliyoruz
+            _notyf.Success("Kullanici Silindi...");
             return RedirectToAction("Index"); // Silme işlemi başarılıysa, Index sayfasına yönlendiriyoruz
         }
 

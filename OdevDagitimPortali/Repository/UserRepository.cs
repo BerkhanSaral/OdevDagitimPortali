@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using OdevDagitimPortali.Models;
 using OdevDagitimPortali.Models.user;
 using OdevDagitimPortali.ViewModels;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -11,10 +13,12 @@ namespace OdevDagitimPortali.Repository
     public class UserRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public UserRepository(ApplicationDbContext context)
+        public UserRepository(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public List<UserModel> GetList()
@@ -28,8 +32,11 @@ namespace OdevDagitimPortali.Repository
                 password = x.password,
                 role=x.role
             }).ToList();
+            
+             return user ?? new List<UserModel>(); // Eğer null ise boş liste döndürüyoruz
 
-            return user ?? new List<UserModel>(); // Eğer null ise boş liste döndürüyoruz
+             
+       
         }
 
         public UserModel GetById(int id)
@@ -95,6 +102,7 @@ namespace OdevDagitimPortali.Repository
 
             if (user == null)
             {
+                Debug.WriteLine("Kullanıcı bulunamadı.");
                 return null; // Kullanıcı bulunamazsa null döndür
             }
 
