@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<SubmissionRepository>();
 builder.Services.AddScoped<AssignmentRepository>();

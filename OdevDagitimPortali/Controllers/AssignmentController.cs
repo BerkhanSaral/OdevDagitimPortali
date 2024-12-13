@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OdevDagitimPortali.Models.user;
@@ -11,11 +12,13 @@ namespace OdevDagitimPortali.Controllers
     {
         private readonly AssignmentRepository _assignmentRepository;
         private readonly ApplicationDbContext _applicationDbContext;
+        private readonly INotyfService _notyf;
 
-        public AssignmentController(AssignmentRepository assignmentRepository, ApplicationDbContext applicationDbContext)
+        public AssignmentController(AssignmentRepository assignmentRepository, ApplicationDbContext applicationDbContext, INotyfService notyf)
         {
             _assignmentRepository = assignmentRepository;
             _applicationDbContext = applicationDbContext;
+            _notyf = notyf;
 
         }
         public IActionResult Index()
@@ -95,6 +98,7 @@ namespace OdevDagitimPortali.Controllers
             try
             {
                 _assignmentRepository.Add(assignment);
+                _notyf.Success("Odev Eklendi...");
                 _assignmentRepository.SaveChanges();
             }
             catch (DbUpdateException ex)
@@ -141,6 +145,7 @@ namespace OdevDagitimPortali.Controllers
 
             }
             _assignmentRepository.Update(model);
+            _notyf.Success("Odev Guncellendi...");
             _assignmentRepository.SaveChanges();
 
             return RedirectToAction("Index");
@@ -173,6 +178,8 @@ namespace OdevDagitimPortali.Controllers
             {
                 // Silme işlemi
                 _assignmentRepository.Delete(model.assignment_id);
+                _notyf.Success("Odev Silindi...");
+
                 TempData["SuccessMessage"] = "Ödev başarıyla silindi.";
             }
             catch (Exception ex)
