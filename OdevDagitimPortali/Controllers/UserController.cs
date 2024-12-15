@@ -20,67 +20,105 @@ namespace OdevDagitimPortali.Controllers
         }
 
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var user = _userRepository.GetList(); // Kullanıcıları al
+            var user = await _userRepository.GetAllAsync(); // Kullanıcıları al
+            var userModels = user.Select(u => new UserModel
+            {
+                user_id = u.user_id,
+                fullname = u.fullname,
+                user_name = u.user_name,
+                email = u.email,
+                password = u.password,
+                role = u.role
+            }).ToList();
+
+            // View'e dönüştürülmüş UserModel listesini gönder
+            return View(userModels);
             return View(user); // Veriyi view'a gönder
         }
 
         public IActionResult Add()
         {
-            ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType))); // Enum'dan rolleri alıyoruz
-
+            // Enum'dan rolleri alıyoruz ve ViewBag'e gönderiyoruz
+            ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType)));
             return View();
         }
 
-
+        // Add Action (POST)
         [HttpPost]
-        public IActionResult Add(UserModel model)
+        public async Task<IActionResult> Add(UserModel model)
         {
             if (!ModelState.IsValid)
             {
-                ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType))); // Rolleri tekrar View'a gönderiyoruz
-
+                // Model geçerli değilse, rolleri tekrar gönderiyoruz
+                ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType)), model.role);
                 return View(model);
             }
-            _userRepository.Add(model);
-            _notyf.Success("Kullanici Eklendi...");
+
+            // Manuel dönüşüm: UserModel'i User entity'sine dönüştürme
+            var user = new Users
+            {
+                fullname = model.fullname,
+                user_name = model.user_name,
+                email = model.email,
+                password = model.password,
+                role = model.role
+            };
+
+            // Veritabanına ekliyoruz
+            await _userRepository.AddAsync(user);
+
+            // Kullanıcı eklenmişse bildirim gönderiyoruz
+            _notyf.Success("Kullanıcı Eklendi...");
             return RedirectToAction("Index");
         }
-        public IActionResult Update(int id)
-        {
-            var user = _userRepository.GetById(id);
-            ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType)), user.role);
 
+        // Update Action (GET)
+        public async Task<IActionResult> Update(int id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+
+            // Kullanıcı verisini ve enum değerlerini View'e gönderiyoruz
+            ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType)), user.role);
             return View(user);
         }
 
+        // Update Action (POST)
         [HttpPost]
-        public IActionResult Update(UserModel model)
+        public async Task<IActionResult> Update(UserModel model)
         {
             if (!ModelState.IsValid)
-            {        ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType)), model.role);
-
+            {
+                // Model geçerli değilse, rolleri tekrar View'a gönderiyoruz
+                ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType)), model.role);
                 return View(model);
             }
-            _userRepository.Update(model);
-            _notyf.Success("Kullanici Güncellendi...");
+
+            // Manuel dönüşüm: UserModel'i User entity'sine dönüştürme
+            var user = new Users
+            {
+                user_id= model.user_id,
+                fullname= model.fullname,
+                user_name= model.user_name,
+                email = model.email,
+                password= model.password,
+                role=model.role
+
+            };
+
+            // Kullanıcıyı güncelliyoruz
+            await _userRepository.UpdateAsync(user);
+
+            // Kullanıcı güncellenmişse bildirim gönderiyoruz
+            _notyf.Success("Kullanıcı Güncellendi...");
             return RedirectToAction("Index");
         }
-        public IActionResult Delete(int id)
-        {
-            var user = _userRepository.GetById(id); // Kullanıcıyı ID ile alıyoruz
-            if (user == null)
-            {
-                TempData["ErrorMessage"] = "Kullanıcı bulunamadı."; // Eğer kullanıcı yoksa, hata mesajı gönderiyoruz
-                return RedirectToAction("Index"); // Kullanıcı bulunamazsa Index sayfasına yönlendiriyoruz
-            }
-            return View(user); // Kullanıcıyı View'a gönderiyoruz
-        }
+
 
 
         [HttpPost]
-        public IActionResult Delete(UserModel model)
+        public async Task<IActionResult> Delete(UserModel model)
         {
             if (model == null || model.user_id == 0)
             {
@@ -88,7 +126,7 @@ namespace OdevDagitimPortali.Controllers
                 return RedirectToAction("Index");
             }
 
-            _userRepository.Delete(model.user_id); // Kullanıcıyı siliyoruz
+            await _userRepository.DeleteAsync(model.user_id); // Kullanıcıyı siliyoruz
             _notyf.Success("Kullanici Silindi...");
             return RedirectToAction("Index"); // Silme işlemi başarılıysa, Index sayfasına yönlendiriyoruz
         }

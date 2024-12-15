@@ -23,7 +23,7 @@ namespace OdevDagitimPortali.Models
         public string submission_date{ get; set; }
 
         public int FileUploadId { get; set; }
-        public FileUpload file_url{ get; set; }
+        public virtual FileUpload file_url{ get; set; }
 
     }
 }
