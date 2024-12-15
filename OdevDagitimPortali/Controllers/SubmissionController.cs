@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using OdevDagitimPortali.Models;
 using OdevDagitimPortali.Models.user;
 using OdevDagitimPortali.Repository;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace OdevDagitimPortali.Controllers
 {
@@ -14,7 +16,6 @@ namespace OdevDagitimPortali.Controllers
         private readonly ApplicationDbContext _applicationDbContext;
         private readonly INotyfService _notyf;
 
-
         public SubmissionController(SubmissionRepository submissionRepository, ApplicationDbContext applicationDbContext, INotyfService notyf)
         {
             _submissionRepository = submissionRepository;
@@ -22,12 +23,25 @@ namespace OdevDagitimPortali.Controllers
             _notyf = notyf;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var submission = _submissionRepository.GetList();
+            var submissionModels = await _applicationDbContext.Submissions
+                .Include(s => s.Assignment)  // İlişkili Assignment'ı dahil et
+                .Include(s => s.User)        // İlişkili User'ı dahil et
+                .Select(s => new SubmissionModel
+                {
+                    submission_id = s.submission_id,
+                    assignment_ID = s.assignment_ID,
+                    user_ID = s.user_ID,
+                    submission_date = s.submission_date,
+                    // İlişkili nesneleri alıyoruz
+                    Assignment = s.Assignment,
+                    User = s.User
+                }).ToListAsync();
 
-            return View(submission);
+            return View(submissionModels);
         }
+
 
         public IActionResult Add()
         {
@@ -49,14 +63,12 @@ namespace OdevDagitimPortali.Controllers
             return View();
         }
 
-
-
         [HttpPost]
-        public IActionResult Add(SubmissionModel model)
+        public async Task<IActionResult> Add(SubmissionModel model)
         {
             if (ModelState.IsValid)
             {
-                // Kullanıcının öğrenci olup olmadığını kontrol et
+                // Öğrencinin geçerli olup olmadığını kontrol et
                 var studentExists = _applicationDbContext.User
                     .Any(u => u.user_id == model.user_ID && u.role == RoleType.STUDENT);
 
@@ -74,7 +86,7 @@ namespace OdevDagitimPortali.Controllers
                 // Dosya yüklenmiş mi kontrol et
                 if (model.UploadedFile != null && model.UploadedFile.Length > 0)
                 {
-                    // Dosyayı `FileUpload` nesnesine dönüştür
+                    // Dosya nesnesini oluştur
                     var fileUpload = new FileUpload
                     {
                         FileName = model.UploadedFile.FileName,
@@ -85,9 +97,9 @@ namespace OdevDagitimPortali.Controllers
 
                     // Dosyayı veritabanına kaydet
                     _applicationDbContext.FileUploads.Add(fileUpload);
-                    _applicationDbContext.SaveChanges();
+                    await _applicationDbContext.SaveChangesAsync();
 
-                    // `Submission` nesnesini oluştur
+                    // Submission nesnesi oluştur
                     var submission = new Submission
                     {
                         assignment_ID = model.assignment_ID,
@@ -97,9 +109,9 @@ namespace OdevDagitimPortali.Controllers
                     };
 
                     // Submission'ı veritabanına kaydet
-                    _applicationDbContext.Submissions.Add(submission);
-                    _notyf.Success("Ogrenci Odevi Ekledi...");
-                    _applicationDbContext.SaveChanges();
+                    await _applicationDbContext.Submissions.AddAsync(submission);
+                    _notyf.Success("Öğrenci ödevi ekledi.");
+                    await _applicationDbContext.SaveChangesAsync();
 
                     return RedirectToAction("Index");
                 }
@@ -109,7 +121,7 @@ namespace OdevDagitimPortali.Controllers
                 }
             }
 
-            // Hata durumunda View verilerini yeniden doldur
+            // Hata durumunda tekrar ödev ve öğrenci listelerini View'a gönder
             ViewBag.Assignments = new SelectList(_applicationDbContext.Assignments, "assignment_id", "title");
             ViewBag.Students = new SelectList(_applicationDbContext.User
                 .Where(u => u.role == RoleType.STUDENT)
@@ -118,9 +130,6 @@ namespace OdevDagitimPortali.Controllers
 
             return View(model);
         }
-
-
-
 
         private byte[] GetFileBytes(IFormFile file)
         {
@@ -131,46 +140,43 @@ namespace OdevDagitimPortali.Controllers
             }
         }
 
-
-
-        public IActionResult Update(int id)
+        public async Task<IActionResult> Update(int id)
         {
-            ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType))); // Enum'dan rolleri alıyoruz
+            // Submission'ı al
+            var submission = await _submissionRepository.GetByIdAsync(id);
 
-            var submission = _submissionRepository.GetById(id);
+            // Ödev listesi
             ViewBag.Assignments = new SelectList(_applicationDbContext.Assignments, "assignment_id", "title");
 
-            return View();
+            return View(submission); // Burada submission modelini gönderiyoruz
         }
 
         [HttpPost]
-        public IActionResult Update(SubmissionModel model)
+        public async Task<IActionResult> Update(SubmissionModel model)
         {
-
             ViewBag.Assignments = new SelectList(_applicationDbContext.Assignments, "assignment_id", "title");
 
+            // Mevcut Submission'ı veritabanından al
+            var existingSubmission = await _submissionRepository.GetByIdAsync(model.submission_id);
 
+            // Güncellenmiş submission'ı kaydet
+            // Burada işlemleri tamamlayın
 
-            // Mevcut Submission'ı veritabanından getir
-            var existingSubmission = _submissionRepository.GetById(model.submission_id);
-
-
-            return View();
+            _notyf.Success("Öğrenci ödevi güncellendi.");
+            return RedirectToAction("Index");
         }
 
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var submission = _submissionRepository.GetById(id);
+            var submission = await _submissionRepository.GetByIdAsync(id);
             return View(submission);
         }
 
         [HttpPost]
-        public IActionResult Delete(SubmissionModel model)
+        public async Task<IActionResult> Delete(SubmissionModel model)
         {
-
-
-            _submissionRepository.Delete(model.assignment_ID);
-            _notyf.Success("Ogrenci Odevi Sildi...");
+            await _submissionRepository.DeleteAsync(model.assignment_ID);
+            _notyf.Success("Öğrenci ödevi silindi.");
             return RedirectToAction("Index");
         }
     }

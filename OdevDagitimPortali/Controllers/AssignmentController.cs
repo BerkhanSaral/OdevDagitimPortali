@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using OdevDagitimPortali.Models;
 using OdevDagitimPortali.Models.user;
 using OdevDagitimPortali.Repository;
 using OdevDagitimPortali.ViewModels;
@@ -12,26 +13,29 @@ namespace OdevDagitimPortali.Controllers
     {
         private readonly AssignmentRepository _assignmentRepository;
         private readonly ApplicationDbContext _applicationDbContext;
+        private readonly UserRepository _userRepository;
+
         private readonly INotyfService _notyf;
 
-        public AssignmentController(AssignmentRepository assignmentRepository, ApplicationDbContext applicationDbContext, INotyfService notyf)
+        public AssignmentController(UserRepository userRepository, AssignmentRepository assignmentRepository, ApplicationDbContext applicationDbContext, INotyfService notyf)
         {
             _assignmentRepository = assignmentRepository;
             _applicationDbContext = applicationDbContext;
+            _userRepository = userRepository;
             _notyf = notyf;
 
         }
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var assignments = _assignmentRepository.GetList();
-            var users = _applicationDbContext.User.ToList();
+            var assignments = await _assignmentRepository.GetAllAsync();
+            var users = await _userRepository.GetAllAsync();
 
             // Görevleri ViewModel ile eşleştiriyoruz
             var assignmentViewModels = assignments.Select(a => new AssignmentModel
             {
                 title = a.title,
-                deadline = a.deadline,
-                create_date = a.create_date,
+                deadline = a.dead_line,
+                create_date = a.created_date,
                 role = a.role,
                 CreatedBy = users.FirstOrDefault(u => u.user_id == a.user_ID)?.user_name // User_ID ile kullanıcıyı eşleştir
             }).ToList();
@@ -39,24 +43,22 @@ namespace OdevDagitimPortali.Controllers
             return View(assignmentViewModels); // View'e ViewModel gönderiyoruz
         }
 
-        public IActionResult Add()
+        public async Task<IActionResult> Add()
         {
             // Teacher veya Admin rolüne sahip kullanıcıları alıyoruz
-            var teachersAndAdmins = _applicationDbContext.User
+            var teachersAndAdmins = await _userRepository
                .Where(u => u.role == RoleType.TEACHER || u.role == RoleType.ADMIN)
                .Select(u => new
                {
                    u.user_id,
                    user_display = u.user_name + " (" + u.role.ToString() + ")"
                })
-               .ToList();
+               .ToListAsync();
 
 
 
             // ViewBag'e doğru filtrelenmiş liste atanıyor
             ViewBag.user_ID = new SelectList(teachersAndAdmins, "user_id", "user_display");
-
-
             ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType))); // Enum'dan rolleri alıyoruz
 
 
@@ -64,127 +66,108 @@ namespace OdevDagitimPortali.Controllers
         }
 
         [HttpPost]
-        public IActionResult Add(AssignmentModel model)
+        public async Task<IActionResult> Add(AssignmentModel model)
         {
-            var user = _applicationDbContext.User
-              .Where(u => u.user_id == model.user_ID)
-              .Select(u => new { u.user_id, u.user_name, u.role }) // Role bilgisini ekleyelim
-              .FirstOrDefault();
-
-            if (user == null)
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("user_ID", "Seçilen kullanıcı mevcut değil.");
+                ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType)));
                 return View(model);
             }
 
-            // Kullanıcı rolü Teacher veya Admin değilse hata ekle
-            if (user.role != RoleType.TEACHER && user.role != RoleType.ADMIN)
+            var user = await _userRepository.GetByIdAsync(model.user_ID);
+            if (user == null || (user.role != RoleType.TEACHER && user.role != RoleType.ADMIN))
             {
-                ModelState.AddModelError("user_ID", "Sadece öğretmen veya admin atanabilir.");
+                ModelState.AddModelError("user_ID", "Seçilen kullanıcı öğretmen veya admin olmalıdır.");
                 return View(model);
             }
 
-            // Atama modelini oluştur
-            var assignment = new AssignmentModel
+            var assignment = new Assignment
             {
                 title = model.title,
                 description = model.description,
-                create_date = model.create_date,
-                deadline = model.deadline,
+                created_date = model.create_date,
+                dead_line= model.deadline,
                 user_ID = model.user_ID,
-                role = model.role // Burada doğru role'ü atıyoruz
+                role = model.role
             };
 
-            try
-            {
-                _assignmentRepository.Add(assignment);
-                _notyf.Success("Odev Eklendi...");
-                _assignmentRepository.SaveChanges();
-            }
-            catch (DbUpdateException ex)
-            {
-                ModelState.AddModelError("", "Veritabanına kayıt eklenirken bir hata oluştu: " + ex.Message);
-                return View(model);
-            }
-
+            await _assignmentRepository.AddAsync(assignment);
+            _notyf.Success("Ödev eklendi!");
             return RedirectToAction("Index");
-
         }
 
-
-        public IActionResult Update(int id)
+        public async Task<IActionResult> Update(int id)
         {
+            var assignment = await _assignmentRepository.GetByIdAsync(id);
+            if (assignment == null)
+            {
+                return NotFound("Ödev bulunamadı.");
+            }
 
-            var assignment = _assignmentRepository.GetById(id);
-
-            // Filtrelenmiş liste tekrar yükleniyor
-            var teachersAndAdmins = _applicationDbContext.User
+            var teachersAndAdmins = await _userRepository
                 .Where(u => u.role == RoleType.TEACHER || u.role == RoleType.ADMIN)
                 .Select(u => new { u.user_id, u.user_name })
-                .ToList();
+                .ToListAsync();
 
-            ViewBag.user_ID = new SelectList(teachersAndAdmins, "user_id", "user_name");
-
+            ViewBag.user_ID = new SelectList(teachersAndAdmins, "user_id", "user_name", assignment.user_ID);
             return View(assignment);
         }
 
         [HttpPost]
-        public IActionResult Update(AssignmentModel model)
+        public async Task<IActionResult> Update(AssignmentModel model)
         {
             if (!ModelState.IsValid)
             {
-                // Filtrelenmiş liste tekrar yükleniyor
-                var teachersAndAdmins = _applicationDbContext.User
+                var teachersAndAdmins = await _userRepository
                     .Where(u => u.role == RoleType.TEACHER || u.role == RoleType.ADMIN)
                     .Select(u => new { u.user_id, u.user_name })
-                    .ToList();
+                    .ToListAsync();
 
                 ViewBag.user_ID = new SelectList(teachersAndAdmins, "user_id", "user_name");
-
-                return View();
-
+                return View(model);
             }
-            _assignmentRepository.Update(model);
-            _notyf.Success("Odev Guncellendi...");
-            _assignmentRepository.SaveChanges();
 
+            var assignment = await _assignmentRepository.GetByIdAsync(model.assignment_id);
+            if (assignment == null)
+            {
+                return NotFound("Ödev bulunamadı.");
+            }
+
+            assignment.title = model.title;
+            assignment.description = model.description;
+            assignment.dead_line = model.deadline;
+            assignment.user_ID = model.user_ID;
+            assignment.role = model.role;
+
+            await _assignmentRepository.UpdateAsync(assignment);
+            _notyf.Success("Ödev güncellendi!");
             return RedirectToAction("Index");
         }
 
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var assignment = _assignmentRepository.GetById(id);
+            var assignment = await _assignmentRepository.GetByIdAsync(id);
             if (assignment == null)
             {
                 TempData["ErrorMessage"] = "Ödev bulunamadı.";
-                return RedirectToAction("Index");  // Ödev bulunamazsa Index sayfasına yönlendir
+                return RedirectToAction("Index");
             }
 
-            // Ödev bulunursa silme işlemini onaylatmak için View'a gönderiyoruz.
             return View(assignment);
         }
 
         // POST Delete: Silme işlemi onaylandıktan sonra gerçekleştirilir.
         [HttpPost]
-        public IActionResult Delete(AssignmentModel model)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (model.assignment_id <= 0)
-            {
-                TempData["ErrorMessage"] = "Geçersiz ödev ID'si.";
-                return RedirectToAction("Index");  // ID geçerli değilse Index sayfasına yönlendir.
-            }
-
             try
             {
-                // Silme işlemi
-                _assignmentRepository.Delete(model.assignment_id);
-                _notyf.Success("Odev Silindi...");
-
-                TempData["SuccessMessage"] = "Ödev başarıyla silindi.";
+                await _assignmentRepository.DeleteAsync(id);
+                _notyf.Success("Ödev silindi!");
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = "Silme işlemi sırasında bir hata oluştu: " + ex.Message;
+                TempData["ErrorMessage"] = $"Hata: {ex.Message}";
             }
 
             return RedirectToAction("Index");

@@ -6,17 +6,23 @@ using System.Data;
 
 namespace OdevDagitimPortali.Repository
 {
-    public class AssignmentRepository
+    public class AssignmentRepository: GenericRepository<Assignment>
     {
 
-        private readonly ApplicationDbContext _context;
+        public AssignmentRepository(ApplicationDbContext context) : base(context)
+        {
+        }
+
+        /*private readonly ApplicationDbContext _context;
 
         public AssignmentRepository(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public List<AssignmentModel> GetList()
+
+
+       public List<AssignmentModel> GetList()
         {
             var assignment = _context.Assignments.Select(x => new AssignmentModel()
             {
@@ -113,7 +119,7 @@ namespace OdevDagitimPortali.Repository
             _context.SaveChanges();
         }
 
-
+        */
 
     }
 }
