@@ -9,7 +9,7 @@ using System.Security.Claims;
 namespace OdevDagitimPortali.Controllers
 {
     public class HomeController : Controller
-    {
+    {/*
         private readonly ILogger<HomeController> _logger;
         private readonly INotyfService _notyf;
         private readonly UserRepository _userRepository;
@@ -103,6 +103,6 @@ namespace OdevDagitimPortali.Controllers
             return RedirectToAction("Login", "Home");
         }
 
-
+        */
     }
 }
