@@ -1,0 +1,51 @@
+﻿<@using OdevDagitimPortali.ViewModels
+        @model List<SubmissionModel>
+        ﻿@{
+    ViewData["title"] = "Index";
+    Layout = "~/Views/Shared/_LayoutStudent.cshtml";
+}
+@section CardHeader {
+         <span>Odev Ver</span>
+}
+
+<a asp-action="Add" asp-controller="StudentSubmission" class="btn btn-primary btn-sm mb-2">Ekle</a>
+
+<div class="container">
+    <h2>Öğrenci Ödevleri</h2>
+
+    @if (Model != null && Model.Any())
+    {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Ödev Başlığı</th>
+                        <th>Gönderim Tarihi</th>
+                        <th>Dosya</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var submission in Model)
+                {
+                            <tr>
+                                <td>@submission.Assignment?.title</td>
+                                <td>@submission.submission_date</td>
+                                <td>
+                            @if (submission.file_url != null)
+                            {
+                                            <a href="@Url.Action("DownloadFile", new { id = submission.file_url.Id })">İndir</a>
+                            }
+                            else
+                            {
+                                            <span>Dosya yok</span>
+                            }
+                                </td>
+                            </tr>
+                }
+                </tbody>
+            </table>
+    }
+    else
+    {
+            <p>Bu öğrenciye ait herhangi bir ödev bulunmamaktadır.</p>
+    }
+</div>
