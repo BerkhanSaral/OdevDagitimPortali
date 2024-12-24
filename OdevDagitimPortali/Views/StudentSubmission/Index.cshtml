@@ -1,0 +1,78 @@
+﻿@using OdevDagitimPortali.ViewModels
+@model List<SubmissionModel>
+
+@{
+    ViewData["title"] = "Index";
+    Layout = "~/Views/Shared/_LayoutStudent.cshtml";
+}
+
+@section CardHeader {
+    <span>Odev Ver</span>
+}
+
+<a asp-action="Add" asp-controller="StudentSubmission" class="btn btn-primary btn-sm mb-2">Ekle</a>
+
+<div class="container">
+    <h2>Öğrenci Ödevleri</h2>
+
+    @if (Model != null && Model.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Ödev Başlığı</th>
+                    <th>Gönderim Tarihi</th>
+                    <th>Dosya</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var submission in Model)
+                {
+                    <tr>
+                        <td>@submission.Assignment?.title</td>
+                        <td>@submission.submission_date</td>
+                        <td>
+                            @if (submission.file_url != null)
+                            {
+                                <a href="@Url.Action("DownloadFile", new { id = submission.file_url.Id })">İndir</a>
+                            }
+                            else
+                            {
+                                <span>Dosya yok</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>Bu öğrenciye ait herhangi bir ödev bulunmamaktadır.</p>
+    }
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/signalr/5.0.10/signalr.min.js"></script>
+<script type="text/javascript">
+    // SignalR bağlantısı oluştur
+    var connection = new signalR.HubConnectionBuilder()
+        .withUrl("/generalHub") // Hub URL'sini burada belirtin
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+    // Mesaj alındığında yapılacak işlem
+    connection.on("ReceiveSubmissionUpdate", function (message) {
+        console.log("SignalR mesajı alındı: " + message);
+        // Burada mesajla ilgili yapılacak işlemleri ekleyebilirsiniz
+        alert(message); // Örneğin, alert ile mesaj gösterilebilir
+    });
+
+    // Bağlantıyı başlatma
+    connection.start()
+        .then(function () {
+            console.log("SignalR bağlantısı başarıyla başlatıldı.");
+        })
+        .catch(function (err) {
+            console.error("SignalR bağlantısı hatalı:", err);
+        });
+</script>

@@ -19,6 +19,5 @@ namespace OdevDagitimPortali.Models
         [ForeignKey("user_ID")]
         public virtual Users User { get; set; }
 
-
     }
 }

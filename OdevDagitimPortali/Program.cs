@@ -1,25 +1,44 @@
-using Microsoft.EntityFrameworkCore;
-using OdevDagitimPortali.Repository;
-using System;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using AspNetCoreHero.ToastNotification;
+using Microsoft.EntityFrameworkCore;
+using OdevDagitimPortali.Areas.Identity.Data;
+using OdevDagitimPortali.Data;
+using OdevDagitimPortali.Hubs;
+using OdevDagitimPortali.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddControllersWithViews();
+// Veritabanı bağlantı dizesi
+var applicationDbContextConnection = builder.Configuration.GetConnectionString("ApplicationDbContext")
+    ?? throw new InvalidOperationException("Connection string 'ApplicationDbContext' not found.");
+var odevDagitimDbContextConnection = builder.Configuration.GetConnectionString("OdevDagitimDbContext")
+    ?? throw new InvalidOperationException("Connection string 'OdevDagitimDbContext' not found.");
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+// ApplicationDbContext için SQL Server bağlantısı
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(applicationDbContextConnection);
+});
+
+// OdevDagitimDbContext için SQL Server bağlantısı
+builder.Services.AddDbContext<OdevDagitimDbContext>(options =>
+{
+    options.UseSqlServer(odevDagitimDbContextConnection);
+});
+
+// Identity işlemleri için OdevDagitimDbContext kullanımı
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = true;
+    options.Password.RequireUppercase = false; // Şifre doğrulama kuralları
+})
+.AddEntityFrameworkStores<OdevDagitimDbContext>();
+
+// Repository'leri Scoped olarak kaydet
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<SubmissionRepository>();
 builder.Services.AddScoped<AssignmentRepository>();
 
-builder.Services.AddDbContext<ApplicationDbContext>(opt =>
-{
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
-
+// Notyf konfigürasyonu
 builder.Services.AddNotyf(config =>
 {
     config.DurationInSeconds = 10;
@@ -27,17 +46,28 @@ builder.Services.AddNotyf(config =>
     config.Position = NotyfPosition.BottomRight;
 });
 
-builder.Services.AddAuthentication("MyCookieAuth")
-    .AddCookie("MyCookieAuth", options =>
+// SignalR servisini ekle
+builder.Services.AddSignalR();
+
+// CORS ayarlarını ekle
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
     {
-        options.Cookie.Name = "MyCookieAuth";
-        options.LoginPath = "/Home/Login";
-        options.AccessDeniedPath = "/Home/AccessDenied";
+        policy.WithOrigins("https://localhost:5001", "http://localhost:5000") // Güvenilir istemci adresleri
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // SignalR için gerekli
     });
+});
+
+// Razor Pages ve MVC için gerekli servisleri ekle
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Middleware sıralaması
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -49,11 +79,18 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
+app.UseAuthentication(); // Authentication middleware
 app.UseAuthorization();
 
+app.UseCors(); // CORS middleware
+
+// SignalR hub rotasını ekle
+app.MapHub<GeneralHub>("/Hubs/generalhub");
+
+// Route yapılandırması
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapRazorPages();
 
 app.Run();
