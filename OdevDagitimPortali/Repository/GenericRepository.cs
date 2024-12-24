@@ -5,9 +5,8 @@ namespace OdevDagitimPortali.Repository
 {
     public class GenericRepository<T> where T : class
     {
-        public readonly ApplicationDbContext _context;
+        public readonly ApplicationDbContext _context;  // OdevDagitimDbContext kullanılıyor
         private readonly DbSet<T> _dbSet;
-
 
         public GenericRepository(ApplicationDbContext context)
         {
@@ -46,11 +45,11 @@ namespace OdevDagitimPortali.Repository
                 await _context.SaveChangesAsync();
             }
         }
+
         public IQueryable<T> Where(Expression<Func<T, bool>> expression)
         {
             return _dbSet.Where(expression);
         }
-
-
     }
+
 }
