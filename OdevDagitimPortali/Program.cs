@@ -1,5 +1,6 @@
 using AspNetCoreHero.ToastNotification;
 using Microsoft.EntityFrameworkCore;
+<<<<<<< HEAD
 using OdevDagitimPortali.Areas.Identity.Data;
 using OdevDagitimPortali.Data;
 using OdevDagitimPortali.Hubs;
@@ -32,12 +33,49 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     options.Password.RequireUppercase = false; // Şifre doğrulama kuralları
 })
 .AddEntityFrameworkStores<OdevDagitimDbContext>();
+=======
+using OdevDagitimPortali.Repository;
+using Microsoft.AspNetCore.Identity;
+using OdevDagitimPortali.Data;
+using OdevDagitimPortali.Areas.Identity.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
+
+// AutoMapper Konfigürasyonu
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
 
 // Repository'leri Scoped olarak kaydet
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<SubmissionRepository>();
 builder.Services.AddScoped<AssignmentRepository>();
 
+<<<<<<< HEAD
+=======
+// ApplicationDbContext için SQL Server bağlantısı (Veritabanı işlemleri için)
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationDbContext"));
+});
+
+// Identity işlemleri için OdevDagitimDbContext
+builder.Services.AddDbContext<OdevDagitimDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("OdevDagitimDbContext"));
+});
+
+// Identity konfigürasyonu
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = true;
+})
+.AddEntityFrameworkStores<OdevDagitimDbContext>();
+
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
 // Notyf konfigürasyonu
 builder.Services.AddNotyf(config =>
 {
@@ -46,6 +84,7 @@ builder.Services.AddNotyf(config =>
     config.Position = NotyfPosition.BottomRight;
 });
 
+<<<<<<< HEAD
 // SignalR servisini ekle
 builder.Services.AddSignalR();
 
@@ -65,6 +104,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+=======
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
 var app = builder.Build();
 
 // Middleware sıralaması
@@ -79,6 +120,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+<<<<<<< HEAD
 app.UseAuthentication(); // Authentication middleware
 app.UseAuthorization();
 
@@ -87,6 +129,11 @@ app.UseCors(); // CORS middleware
 // SignalR hub rotasını ekle
 app.MapHub<GeneralHub>("/Hubs/generalhub");
 
+=======
+app.UseAuthentication(); // Authentication'ı ekleyin
+app.UseAuthorization();
+
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
 // Route yapılandırması
 app.MapControllerRoute(
     name: "default",
@@ -94,3 +141,4 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
+

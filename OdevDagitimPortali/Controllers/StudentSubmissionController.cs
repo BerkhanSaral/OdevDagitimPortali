@@ -1,9 +1,13 @@
 ﻿using AspNetCoreHero.ToastNotification.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+<<<<<<< HEAD
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OdevDagitimPortali.Hubs;
+=======
+using Microsoft.EntityFrameworkCore;
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
 using OdevDagitimPortali.Models;
 using OdevDagitimPortali.Models.user;
 using OdevDagitimPortali.Repository;
@@ -14,10 +18,15 @@ namespace OdevDagitimPortali.Controllers
 {
     public class StudentSubmissionController : Controller
     {
+<<<<<<< HEAD
+=======
+
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
         private readonly SubmissionRepository _submissionRepository;
         private readonly ApplicationDbContext _applicationDbContext;
         private readonly UserRepository _userRepository;
         private readonly INotyfService _notyf;
+<<<<<<< HEAD
         private readonly IHubContext<GeneralHub> _hubContext;
 
         public StudentSubmissionController(
@@ -26,12 +35,19 @@ namespace OdevDagitimPortali.Controllers
             INotyfService notyf,
             UserRepository userRepository,
             IHubContext<GeneralHub> hubContext)
+=======
+
+        public StudentSubmissionController(SubmissionRepository submissionRepository, ApplicationDbContext applicationDbContext, INotyfService notyf, UserRepository userRepository)
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
         {
             _submissionRepository = submissionRepository;
             _applicationDbContext = applicationDbContext;
             _notyf = notyf;
             _userRepository = userRepository;
+<<<<<<< HEAD
             _hubContext = hubContext;
+=======
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
         }
 
         public async Task<IActionResult> Index(int userID)
@@ -60,6 +76,10 @@ namespace OdevDagitimPortali.Controllers
             return View(submissions);
         }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
         public IActionResult Add()
         {
             // Ödev listesi
@@ -69,15 +89,34 @@ namespace OdevDagitimPortali.Controllers
 
             ViewBag.Assignments = new SelectList(assignments, "assignment_id", "title");
 
+<<<<<<< HEAD
             return View();
         }
 
+=======
+            // Öğrenci listesi
+            /* var students = _applicationDbContext.User
+                 .Where(u => u.role == RoleType.STUDENT)
+                 .Select(u => new { u.user_id, u.user_name })
+                 .ToList();
+
+             ViewBag.Students = new SelectList(students, "user_id", "user_name");*/
+
+            return View();
+        }
+
+
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
         [HttpPost]
         public async Task<IActionResult> Add(SubmissionModel model)
         {
             // Ödev listesini tekrar doldur
             ViewBag.Assignments = new SelectList(_applicationDbContext.Assignments, "assignment_id", "title");
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
             try
             {
                 foreach (var modelStateKey in ModelState.Keys)
@@ -130,10 +169,13 @@ namespace OdevDagitimPortali.Controllers
                     await _applicationDbContext.SaveChangesAsync();
 
                     _notyf.Success("Öğrenci ödevi başarıyla eklendi.");
+<<<<<<< HEAD
 
                     // SignalR üzerinden mesaj gönder
                     await _hubContext.Clients.All.SendAsync("ReceiveSubmissionUpdate", "Yeni bir öğrenci ödevi eklendi.");
 
+=======
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
                     return RedirectToAction("Index");
                 }
                 else
@@ -146,9 +188,17 @@ namespace OdevDagitimPortali.Controllers
                 ModelState.AddModelError("", $"Beklenmeyen bir hata oluştu: {ex.Message}");
             }
 
+<<<<<<< HEAD
             return View(model);
         }
 
+=======
+
+            return View(model);
+        }
+
+
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
         private byte[] GetFileBytes(IFormFile file)
         {
             using (var memoryStream = new MemoryStream())
@@ -158,6 +208,10 @@ namespace OdevDagitimPortali.Controllers
             }
         }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
         public async Task<IActionResult> Update(int id)
         {
             // Submission'ı al
@@ -183,5 +237,26 @@ namespace OdevDagitimPortali.Controllers
             _notyf.Success("Öğrenci ödevi güncellendi.");
             return RedirectToAction("Index");
         }
+<<<<<<< HEAD
+=======
+
+
+
+        /*
+        public async Task<IActionResult> Delete(int id)
+        {
+            var submission = await _submissionRepository.GetByIdAsync(id);
+            return View(submission);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(SubmissionModel model)
+        {
+            await _submissionRepository.DeleteAsync(model.assignment_ID);
+            _notyf.Success("Öğrenci ödevi silindi.");
+            return RedirectToAction("Index");
+        }
+        */
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
     }
 }

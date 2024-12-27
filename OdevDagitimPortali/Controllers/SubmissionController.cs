@@ -29,6 +29,7 @@ namespace OdevDagitimPortali.Controllers
                 .Include(s => s.file_url) // file_url ilişkisini dahil et
                 .ToListAsync();
 
+<<<<<<< HEAD
             if (submissionModels == null || !submissionModels.Any())
             {
                 ViewBag.Message = "Henüz bir ödev yüklenmedi.";
@@ -65,5 +66,23 @@ namespace OdevDagitimPortali.Controllers
 
             return File(fileBytes, "application/octet-stream", fileName);
         }
+=======
+            return View(submissionModels);
+        }
+
+        public async Task<IActionResult> DownloadFile(int id)
+        {
+            var fileUpload = await _applicationDbContext.FileUploads.FindAsync(id);
+            if (fileUpload == null)
+            {
+                return NotFound();
+            }
+
+            return File(fileUpload.FileContent, "application/octet-stream", fileUpload.FileName);
+        }
+
+
+>>>>>>> 69414b7d9e73ab87a30fa9f36aa951a195c8c4ae
     }
+
 }
