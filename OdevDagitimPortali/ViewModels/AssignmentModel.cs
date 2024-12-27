@@ -33,14 +33,13 @@ namespace OdevDagitimPortali.ViewModels
         [Required(ErrorMessage = "Lutfen Rolunu Girin!")]
         public RoleType role { get; set; }
 
-
         public string CreatedBy { get; set; } // Görevi kim ekledi
-
-
 
         [Display(Name = "Odevi Veren")]
         [Required(ErrorMessage = "Lutfen Odevle Ilgili Akademisyeni Giriniz!")]
         public int user_ID { get; set; }
         public virtual Users User { get; set; } // User tablosu ile ilişkilendirme
     }
+
+
 }

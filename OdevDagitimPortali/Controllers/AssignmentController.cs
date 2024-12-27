@@ -1,11 +1,15 @@
 ﻿using AspNetCoreHero.ToastNotification.Abstractions;
+using OdevDagitimPortali.Hubs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OdevDagitimPortali.Models;
 using OdevDagitimPortali.Models.user;
 using OdevDagitimPortali.Repository;
 using OdevDagitimPortali.ViewModels;
+
+using System.Diagnostics;
 
 namespace OdevDagitimPortali.Controllers
 {
@@ -64,15 +68,16 @@ namespace OdevDagitimPortali.Controllers
 
             return View();
         }
-
         [HttpPost]
         public async Task<IActionResult> Add(AssignmentModel model)
         {
-            if (!ModelState.IsValid)
+            var errors = ModelState.Values.SelectMany(v => v.Errors);
+            foreach (var error in errors)
             {
-                ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType)));
-                return View(model);
+                Console.WriteLine(error.ErrorMessage); // Hataları konsola yazdırabilirsiniz
             }
+            ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType)));
+
 
             var user = await _userRepository.GetByIdAsync(model.user_ID);
             if (user == null || (user.role != RoleType.TEACHER && user.role != RoleType.ADMIN))
@@ -80,38 +85,42 @@ namespace OdevDagitimPortali.Controllers
                 ModelState.AddModelError("user_ID", "Seçilen kullanıcı öğretmen veya admin olmalıdır.");
                 return View(model);
             }
-
             var assignment = new Assignment
             {
                 title = model.title,
                 description = model.description,
                 created_date = model.create_date,
-                dead_line= model.deadline,
+                dead_line = model.deadline,
                 user_ID = model.user_ID,
                 role = model.role
             };
-
-            await _assignmentRepository.AddAsync(assignment);
-            _notyf.Success("Ödev eklendi!");
-            return RedirectToAction("Index");
+            try
+            {
+                await _assignmentRepository.AddAsync(assignment);
+                _notyf.Success("Ödev eklendi!");
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Ödev eklenirken bir hata oluştu: " + ex.Message);
+                ViewBag.Roles = new SelectList(Enum.GetValues(typeof(RoleType)));
+                return View(model);
+            }
         }
 
         public async Task<IActionResult> Update(int id)
         {
             var assignment = await _assignmentRepository.GetByIdAsync(id);
-            if (assignment == null)
-            {
-                return NotFound("Ödev bulunamadı.");
-            }
 
             var teachersAndAdmins = await _userRepository
                 .Where(u => u.role == RoleType.TEACHER || u.role == RoleType.ADMIN)
                 .Select(u => new { u.user_id, u.user_name })
                 .ToListAsync();
 
-            ViewBag.user_ID = new SelectList(teachersAndAdmins, "user_id", "user_name", assignment.user_ID);
+            ViewBag.user_ID = new SelectList(teachersAndAdmins, "user_id", "user_name", assignment?.user_ID);
             return View(assignment);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Update(AssignmentModel model)
@@ -146,31 +155,37 @@ namespace OdevDagitimPortali.Controllers
 
         public async Task<IActionResult> Delete(int id)
         {
-            var assignment = await _assignmentRepository.GetByIdAsync(id);
-            if (assignment == null)
+            try
             {
-                TempData["ErrorMessage"] = "Ödev bulunamadı.";
+                var assignment = await _assignmentRepository.GetByIdAsync(id);
+                if (assignment == null)
+                {
+                    TempData["ErrorMessage"] = "Ödev bulunamadı.";
+                    return RedirectToAction("Index");
+                }
+                return View(assignment);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Hata: {ex.Message}";
                 return RedirectToAction("Index");
             }
-
-            return View(assignment);
         }
 
-        // POST Delete: Silme işlemi onaylandıktan sonra gerçekleştirilir.
         [HttpPost]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try
             {
                 await _assignmentRepository.DeleteAsync(id);
-                _notyf.Success("Ödev silindi!");
+                _notyf.Success("Ödev başarıyla silindi!");
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
                 TempData["ErrorMessage"] = $"Hata: {ex.Message}";
+                return RedirectToAction("Index");
             }
-
-            return RedirectToAction("Index");
         }
     }
 }

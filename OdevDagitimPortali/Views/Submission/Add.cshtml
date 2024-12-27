@@ -9,54 +9,77 @@
 
 <div class="row">
     <div class="col-md-4">
-
-            <form method="post" asp-action="Add" enctype="multipart/form-data">
-
+        <form id="assignmentForm" enctype="multipart/form-data">
             <div class="mb-3">
                 <label asp-for="assignment_ID"></label>
-                <select asp-for="assignment_ID" asp-items="ViewBag.Assignments" class="form-control">
+                <select name="assignment_ID" id="assignment_ID" class="form-control">
                     <option value="">--- Ödev Seçiniz ---</option>
+                    @foreach (var item in ViewBag.Assignments as SelectList)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
                 </select>
                 <span class="text-danger" asp-validation-for="assignment_ID"></span>
             </div>
 
             <div class="mb-3">
                 <label asp-for="user_ID"></label>
-                <select asp-for="user_ID" asp-items="ViewBag.Students" class="form-control">
+                <select name="user_ID" id="user_ID" class="form-control">
                     <option value="">--- Öğrenci Seçiniz ---</option>
+                    @foreach (var item in ViewBag.Students as SelectList)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
                 </select>
                 <span class="text-danger" asp-validation-for="user_ID"></span>
             </div>
 
             <div class="mb-3">
                 <label asp-for="submission_date"></label>
-                <input asp-for="submission_date" class="form-control" />
+                <input name="submission_date" id="submission_date" type="date" class="form-control" />
                 <span class="text-danger" asp-validation-for="submission_date"></span>
             </div>
 
-         
             <div class="mb-3">
                 <label for="UploadedFile" class="form-label">Dosya Yükle</label>
-                <input asp-for="UploadedFile" type="file" class="form-control" />
+                <input name="UploadedFile" id="UploadedFile" type="file" class="form-control" />
                 <span class="text-danger" asp-validation-for="UploadedFile"></span>
             </div>
 
             <div class="mb-3">
-                <input type="submit" value="Kaydet" class="btn btn-sm btn-primary" />
+                <button type="submit" class="btn btn-sm btn-primary">Kaydet</button>
             </div>
-
         </form>
-
-
     </div>
 </div>
+
+<script>
+    document.getElementById("assignmentForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const formElement = event.target;
+        const formData = new FormData(formElement);
+
+        try {
+            const response = await fetch('/Assignments/SubmitAssignment', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+                alert("Assignment submitted successfully!");
+                formElement.reset();
+            } else {
+                const error = await response.json();
+                alert(`Submission failed: ${error.message}`);
+            }
+        } catch (err) {
+            console.error("Error submitting assignment:", err);
+            alert("Bir hata oluştu. Lütfen tekrar deneyin.");
+        }
+    });
+</script>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }
-
-
-
-
-
-
